@@ -53,8 +53,8 @@ Max marks <input id="maxm" type="number" min="1" value="20" style="width:60px"><
 const fp=k=>k.replace(/\//g,'_');
 const LV=['Y12 Maths','Y13 Maths','Y12 FM','Y13 FM'];
 const LVC={'Y12 Maths':'H230','Y13 Maths':'H240','Y12 FM':'H245','Y13 FM':'H245'};
-const D=RAW.map(r=>({pre:r[7]||LVC[r[0]],k:(r[7]||LVC[r[0]])+'/'+r[1]+'-'+r[2]+'/'+r[3],lvl:r[0],y:r[1],p:r[2],q:r[3],m:r[4],d:r[5],t:r[6]}));
-const lab=q=>`June 20${q.y} ${q.pre}/0${q.p} Q${q.q}`;
+const D=RAW.map(r=>({pre:r[7]||LVC[r[0]],k:(r[7]||LVC[r[0]])+'/'+r[1]+'-'+r[2]+'/'+r[3],lvl:r[0],mo:r[8]||'June',y:r[1],p:r[2],q:r[3],m:r[4],d:r[5],t:r[6]}));
+const lab=q=>`${q.mo} 20${q.y} ${q.pre}/0${q.p} Q${q.q}`;
 const img=(q,e)=>`<img class="qi" ${e?'':'loading="lazy" '}src="img/q/${fp(q.k)}.jpg" alt="${lab(q)}">`;
 const am=(q,e)=>`<img class="qi" style="border:1px solid #ccc" ${e?'':'loading="lazy" '}src="img/a/${fp(q.k)}.jpg" alt="Mark scheme ${lab(q)}">`;
 let S={};try{S=JSON.parse(localStorage.getItem('qb2')||'{}')}catch(e){}
