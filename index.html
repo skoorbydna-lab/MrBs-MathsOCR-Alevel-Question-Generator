@@ -32,7 +32,16 @@ h3.ch{font:600 15px sans-serif;margin:18px 0 8px}h3.ch.cp{color:var(--cp)}h3.ch.
 #sheet{display:none}
 body.ws>*:not(#sheet){display:none}body.ws #sheet{display:block;background:#fff;color:#000;padding:16px;min-height:100vh}
 #sheet .pq{margin-bottom:18px;page-break-inside:avoid}@media print{.nop{display:none}#sheet{padding:0}}
+#gate{display:none;position:fixed;inset:0;align-items:center;justify-content:center;background:var(--bg);z-index:9}
+body.locked #gate{display:flex}body.locked>*:not(#gate){display:none}
+#gate .gb{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:28px 32px;max-width:340px;text-align:center}
+#gate h2{margin:0 0 6px;font:400 20px Georgia,serif;letter-spacing:.03em}#gate p{font:13px sans-serif;color:var(--mut);margin:0 0 14px}
+#gate input[type=password]{width:100%;padding:9px;font-size:15px;margin-bottom:10px}#gate label{display:block;font:12px sans-serif;color:var(--mut);margin-bottom:12px}
 </style></head><body>
+<div id="gate"><div class="gb"><h2><span style="color:var(--acc);font-weight:700">A-Level Maths</span><br>Past Exam Question Selector</h2><p>Enter the password to continue.</p>
+<input id="pw" type="password" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')tryLogin()">
+<label><input id="rem" type="checkbox"> Remember me on this device</label>
+<button class="act" onclick="tryLogin()">Enter</button><div id="gmsg" style="font:13px sans-serif;color:var(--h);margin-top:10px;min-height:18px"></div></div></div>
 <header><h1><span class="hl">A-Level Maths</span> Past Exam Question Selector</h1><div class="tabs" id="tabs"></div></header>
 <div class="wrap">
 <aside>
@@ -48,6 +57,8 @@ Max marks <input id="maxm" type="number" min="1" value="20" style="width:60px"><
 </aside>
 <main><div id="list"></div></main></div>
 <div id="sheet"></div>
+<script src="sha.js"></script>
+<script src="auth.js"></script>
 <script src="data.js"></script>
 <script>
 const fp=k=>k.replace(/\//g,'_');
@@ -69,7 +80,7 @@ const ord=t=>{const[b,c]=pt(t);const i=TB[lv].indexOf(b);return(i<0?9:i)*100+c};
 const prov=t=>{const[b,c]=pt(t);return b==21&&c>=16};
 const cname=t=>{const[b,c]=pt(t);return CHB[b][c]};
 const clab=t=>{const[b,c]=pt(t);if(prov(t))return CHB[b][c];return(b==TB[lv][0]?'':BS[b]+' ')+'Ch '+c+': '+CHB[b][c]};
-const dn=['','Easy','Medium','Hard'],gd=q=>dOv[q.k]||q.d;
+const dn=['','Easy','Medium','Hard'],gd=q=>q.d;
 function save(){try{localStorage.setItem('qb2',JSON.stringify({b:basket,d:dOv,l:lv}))}catch(e){}}
 const cur=()=>D.filter(q=>q.lvl==lv);
 function build(){
@@ -88,7 +99,6 @@ document.addEventListener('click',e=>{
 pp.onchange=maxm.oninput=()=>render();
 function tog(k){const i=basket.indexOf(k);i<0?basket.push(k):basket.splice(i,1);save();render()}
 function ans(i){document.getElementById('q'+i).classList.toggle('show')}
-function setD(k,v){dOv[k]=+v;save();render()}
 function hd(q){const t=bt(q);if(t===lastC)return'';lastC=t;return`<h3 class="ch c${cat(t)}">${pt(t)[0]!=TB[lv][0]?BH[pt(t)[0]]+' · ':''}${prov(t)?'':'Chapter '+pt(t)[1]+': '}${cname(t)}</h3>`}
 const bt=q=>q.t.slice().sort((a,b)=>ord(a)-ord(b))[0];
 function render(){
@@ -100,8 +110,7 @@ function render(){
  ${q.t.map(t=>`<span class="tag c${cat(t)}">${clab(t)}</span>`).join('')}</div>
  ${img(q)}<div class="ans">${am(q)}</div>
  <div class="row"><button class="act" onclick="tog('${q.k}')">${basket.includes(q.k)?'Remove':'Add to worksheet'}</button>
- <button class="act" style="background:var(--mut)" onclick="ans(${n})">Mark scheme</button>
- <select onchange="setD('${q.k}',this.value)" title="Edit difficulty">${[1,2,3].map(v=>`<option value="${v}"${v==gd(q)?' selected':''}>${dn[v]}</option>`).join('')}</select></div></div>`).join(''):'<p>No questions here yet. Send the papers (and the textbook contents page for this course) and I will add them.</p>';
+ <button class="act" style="background:var(--mut)" onclick="ans(${n})">Mark scheme</button></div></div>`).join(''):'<p>No questions here yet. Send the papers (and the textbook contents page for this course) and I will add them.</p>';
  cnt.textContent=basket.length;tm.textContent=basket.reduce((s,k)=>s+D.find(q=>q.k==k).m,0)}
 function body_(){const B=basket.map(k=>D.find(q=>q.k==k));
  return '<h2 style="font-family:sans-serif">Maths worksheet</h2>'+B.map((q,n)=>`<div class="pq"><div style="font:11px sans-serif;color:#555">Worksheet Q${n+1} · ${lab(q)} · ${q.m} marks</div>${img(q,1)}</div>`).join('')
@@ -114,5 +123,9 @@ function printSheet(){
 function closeSheet(){document.body.classList.remove('ws')}
 function dl(){const base=location.href.replace(/[^/]*$/,'');const h='<!DOCTYPE html><meta charset="utf-8"><base href="'+base+'"><title>Maths worksheet</title><style>body{font:15px Georgia,serif;margin:20px}.pq{margin-bottom:18px;page-break-inside:avoid}img{max-width:100%}</style>'+body_();
  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([h],{type:'text/html'}));a.download='worksheet.html';document.body.appendChild(a);a.click();a.remove()}
-build();render();
+function unlocked(){try{return localStorage.getItem('qb_ok')===AUTH.hash||sessionStorage.getItem('qb_ok')===AUTH.hash}catch(e){return false}}
+function go(){document.body.classList.remove('locked');build();render()}
+function tryLogin(){const p=pw.value;gmsg.textContent='Checking...';setTimeout(()=>{if(hashPw(p,AUTH.salt,AUTH.rounds)===AUTH.hash){try{(rem.checked?localStorage:sessionStorage).setItem('qb_ok',AUTH.hash)}catch(e){}pw.value='';gmsg.textContent='';go()}else{gmsg.textContent='Incorrect password.';pw.value=''}},30)}
+if(unlocked())go();else{document.body.classList.add('locked');setTimeout(()=>{try{pw.focus()}catch(e){}},50)}
+
 </script></body></html>
