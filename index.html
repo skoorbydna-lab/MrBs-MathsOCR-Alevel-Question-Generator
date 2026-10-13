@@ -18,7 +18,7 @@ aside{flex:1 1 250px;max-width:310px}main{flex:3 1 400px;min-width:0}
 .chip.cp.on{background:var(--cp);color:var(--bg)}.chip.cs.on{background:var(--cs);color:var(--bg)}.chip.cm.on{background:var(--cm);color:var(--bg)}
 .lg{font:12px sans-serif;margin-bottom:6px}.lg b{margin-right:10px}
 select,input{font:14px sans-serif;padding:4px;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:4px}
-button.act{font:600 14px sans-serif;padding:8px 12px;border:0;border-radius:6px;background:var(--acc);color:var(--bg);cursor:pointer;margin:2px 0}
+button.act,a.act{text-decoration:none;display:inline-block;font:600 14px sans-serif;padding:8px 12px;border:0;border-radius:6px;background:var(--acc);color:var(--bg);cursor:pointer;margin:2px 0}
 .q{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px;margin-bottom:10px}
 .q.sel{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc)}
 .meta{font:12px sans-serif;color:var(--mut);display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:6px}
@@ -113,7 +113,7 @@ function render(){
  ${img(q)}<div class="ans">${am(q)}</div>
  <div class="row"><button class="act" onclick="tog('${q.k}')">${basket.includes(q.k)?'Remove':'Add to worksheet'}</button>
  <button class="act" style="background:var(--mut)" onclick="ans(${n})">Mark scheme</button>
- ${SIMS.has(q.k)?`<a class="act" style="text-decoration:none;display:inline-block;background:var(--cm)" href="similar/${fp(q.k)}.pdf" target="_blank" rel="noopener">Similar questions</a>`:''}</div></div>`).join(''):'<p>No questions here yet. Send the papers (and the textbook contents page for this course) and I will add them.</p>';
+ ${SIMS.has(q.k)?`<a class="act" style="background:var(--mut)" href="similar/${fp(q.k)}.pdf" target="_blank" rel="noopener">Similar questions</a>`:''}</div></div>`).join(''):'<p>No questions here yet. Send the papers (and the textbook contents page for this course) and I will add them.</p>';
  cnt.textContent=basket.length;tm.textContent=basket.reduce((s,k)=>s+D.find(q=>q.k==k).m,0)}
 function body_(){const B=basket.map(k=>D.find(q=>q.k==k));
  return '<h2 style="font-family:sans-serif">Maths worksheet</h2>'+B.map((q,n)=>`<div class="pq"><div style="font:11px sans-serif;color:#555">Worksheet Q${n+1} · ${lab(q)} · ${q.m} marks</div>${img(q,1)}</div>`).join('')
