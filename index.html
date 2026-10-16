@@ -63,7 +63,7 @@ Max marks <input id="maxm" type="number" min="1" value="20" style="width:60px"><
 <script src="similar.js"></script>
 <script>
 const fp=k=>k.replace(/\//g,'_');
-const SIMS=new Set(typeof SIM!=='undefined'?SIM:[]);
+const SIMM=(typeof SIM!=='undefined'&&!Array.isArray(SIM))?SIM:{};
 const LV=['Y12 Maths','Y13 Maths','Y12 FM','Y13 FM'];
 const LVC={'Y12 Maths':'H230','Y13 Maths':'H240','Y12 FM':'H245','Y13 FM':'H245'};
 const D=RAW.map(r=>({pre:r[7]||LVC[r[0]],k:(r[7]||LVC[r[0]])+'/'+r[1]+'-'+r[2]+'/'+r[3],lvl:r[0],mo:r[8]||'June',y:r[1],p:r[2],q:r[3],m:r[4],d:r[5],t:r[6]}));
@@ -113,7 +113,7 @@ function render(){
  ${img(q)}<div class="ans">${am(q)}</div>
  <div class="row"><button class="act" onclick="tog('${q.k}')">${basket.includes(q.k)?'Remove':'Add to worksheet'}</button>
  <button class="act" style="background:var(--mut)" onclick="ans(${n})">Mark scheme</button>
- ${SIMS.has(q.k)?`<a class="act" style="background:var(--mut)" href="similar/${fp(q.k)}.pdf" target="_blank" rel="noopener">Similar questions</a>`:''}</div></div>`).join(''):'<p>No questions here yet. Send the papers (and the textbook contents page for this course) and I will add them.</p>';
+ ${SIMM[q.k]?`<a class="act" style="background:var(--mut)" href="similar/${SIMM[q.k]}.pdf" target="_blank" rel="noopener">Similar questions</a>`:''}</div></div>`).join(''):'<p>No questions here yet. Send the papers (and the textbook contents page for this course) and I will add them.</p>';
  cnt.textContent=basket.length;tm.textContent=basket.reduce((s,k)=>s+D.find(q=>q.k==k).m,0)}
 function body_(){const B=basket.map(k=>D.find(q=>q.k==k));
  return '<h2 style="font-family:sans-serif">Maths worksheet</h2>'+B.map((q,n)=>`<div class="pq"><div style="font:11px sans-serif;color:#555">Worksheet Q${n+1} · ${lab(q)} · ${q.m} marks</div>${img(q,1)}</div>`).join('')
