@@ -1,1 +1,1 @@
-const AUTH={salt:"670f1e66eb96f015",rounds:5000,hash:"b6982e2f98b2f97d8a48ae84f514e5daedf0c8996d8efa22f1f1fe166539dc22"};
+const AUTH={salt:"26932b87da991379",rounds:5000,hash:"fbe1248c7093f73d142af9b91dad805e13a925241075f00b93cc5e7e5d05d7c8"};
