@@ -115,17 +115,24 @@ function render(){
  <button class="act" style="background:var(--mut)" onclick="ans(${n})">Mark scheme</button>
  ${SIMM[q.k]?`<a class="act" style="background:var(--mut)" href="similar/${encodeURIComponent(SIMM[q.k])}.pdf" target="_blank" rel="noopener">Similar questions</a>`:''}</div></div>`).join(''):'<p>No questions here yet. Send the papers (and the textbook contents page for this course) and I will add them.</p>';
  cnt.textContent=basket.length;tm.textContent=basket.reduce((s,k)=>s+D.find(q=>q.k==k).m,0)}
+const LVN={'Y12 Maths':'Year 12 Maths','Y13 Maths':'Year 13 Maths','Y12 FM':'Year 12 Further Maths','Y13 FM':'Year 13 Further Maths'};
+function wsTitle(){const B=basket.map(k=>D.find(q=>q.k==k));const lvs=[...new Set(B.map(q=>q.lvl))].sort((a,b)=>LV.indexOf(a)-LV.indexOf(b));
+ const tp=[];B.forEach(q=>{const n=cname(bt(q));if(!tp.includes(n))tp.push(n)});
+ const lt=lvs.map(l=>LVN[l]||l).join(' & ');const tt=tp.length<=3?tp.join(', '):'Mixed topics';
+ return lt+' - '+tt}
+function wsFile(t){return t.replace(/[^A-Za-z0-9 ,&\-\(\)\.]/g,'').replace(/\s+/g,' ').trim().slice(0,120)}
 function body_(){const B=basket.map(k=>D.find(q=>q.k==k));
- return '<h2 style="font-family:sans-serif">Maths worksheet</h2>'+B.map((q,n)=>`<div class="pq"><div style="font:11px sans-serif;color:#555">Worksheet Q${n+1} · ${lab(q)} · ${q.m} marks</div>${img(q,1)}</div>`).join('')
+ return '<h2 style="font-family:sans-serif">'+wsTitle().replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</h2>'+B.map((q,n)=>`<div class="pq"><div style="font:11px sans-serif;color:#555">Worksheet Q${n+1} · ${lab(q)} · ${q.m} marks</div>${img(q,1)}</div>`).join('')
  +(wans.checked?'<h2 style="page-break-before:always;font-family:sans-serif">Mark schemes</h2>'+B.map((q,n)=>`<div class="pq"><div style="font:11px sans-serif;color:#555">Worksheet Q${n+1} · ${lab(q)}</div>${am(q,1)}</div>`).join(''):'')}
 function printSheet(){
  if(!basket.length){msg.textContent='Add some questions to the worksheet first.';return}
  msg.textContent='';
  sheet.innerHTML='<div class="nop"><button class="act" onclick="closeSheet()">&larr; Back</button> <button class="act" onclick="try{window.print()}catch(e){}">Print / save as PDF</button> <button class="act" onclick="dl()">Download as HTML file</button><p style="font:13px sans-serif;color:#555">If Print does nothing here, use Download, open the downloaded file in your browser on this computer, then print (Ctrl/Cmd+P) and choose Save as PDF.</p></div>'+body_();
- document.body.classList.add('ws');window.scrollTo(0,0)}
-function closeSheet(){document.body.classList.remove('ws')}
-function dl(){const base=location.href.replace(/[^/]*$/,'');const h='<!DOCTYPE html><meta charset="utf-8"><base href="'+base+'"><title>Maths worksheet</title><style>body{font:15px Georgia,serif;margin:20px}.pq{margin-bottom:18px;page-break-inside:avoid}img{max-width:100%}</style>'+body_();
- const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([h],{type:'text/html'}));a.download='worksheet.html';document.body.appendChild(a);a.click();a.remove()}
+ oldT=document.title;document.title=wsFile(wsTitle());document.body.classList.add('ws');window.scrollTo(0,0)}
+let oldT=document.title;
+function closeSheet(){document.body.classList.remove('ws');document.title=oldT}
+function dl(){const base=location.href.replace(/[^/]*$/,'');const h='<!DOCTYPE html><meta charset="utf-8"><base href="'+base+'"><title>'+wsFile(wsTitle())+'</title><style>body{font:15px Georgia,serif;margin:20px}.pq{margin-bottom:18px;page-break-inside:avoid}img{max-width:100%}</style>'+body_();
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([h],{type:'text/html'}));a.download=wsFile(wsTitle())+'.html';document.body.appendChild(a);a.click();a.remove()}
 function unlocked(){try{return localStorage.getItem('qb_ok')===AUTH.hash||sessionStorage.getItem('qb_ok')===AUTH.hash}catch(e){return false}}
 function go(){document.body.classList.remove('locked');build();render()}
 function tryLogin(){const p=pw.value;gmsg.textContent='Checking...';setTimeout(()=>{if(hashPw(p,AUTH.salt,AUTH.rounds)===AUTH.hash){try{(rem.checked?localStorage:sessionStorage).setItem('qb_ok',AUTH.hash)}catch(e){}pw.value='';gmsg.textContent='';go()}else{gmsg.textContent='Incorrect password.';pw.value=''}},30)}
