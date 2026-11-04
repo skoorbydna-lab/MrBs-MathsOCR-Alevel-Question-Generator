@@ -47,8 +47,9 @@ body.locked #gate{display:flex}body.locked>*:not(#gate){display:none}
 <aside>
 <div class="box"><h3>Textbook chapter</h3><div class="lg"><b style="color:var(--cp)">&#9632; Pure</b><b style="color:var(--cs)">&#9632; Statistics</b><b style="color:var(--cm)">&#9632; Mechanics</b></div><div id="topics"></div></div>
 <div class="box"><h3>Difficulty</h3><div id="diffs"></div></div>
-<div class="box"><h3>Paper &amp; marks</h3>
-<select id="pp"></select><br><br>
+<div class="box"><h3>Whole paper / marks</h3>
+<select id="pp"></select>
+<div style="font:12px sans-serif;color:var(--mut);margin:6px 0 10px">Pick a paper to show all its questions in order (other filters are ignored).</div>
 Max marks <input id="maxm" type="number" min="1" value="20" style="width:60px"></div>
 <div class="box"><h3>Worksheet (<span id="cnt">0</span> q, <span id="tm">0</span> marks)</h3>
 <label><input type="checkbox" id="wans"> include mark schemes</label><br>
@@ -92,7 +93,7 @@ function build(){
   return h+`<button class="chip c${cat(t)}${fT.has(t)?' on':''}" data-t="${t}">${prov(t)?'':pt(t)[1]+'. '}${cname(t)} (${Q.filter(q=>q.t.includes(t)).length})</button>`}).join('')||'<i style="font:13px sans-serif">No chapters yet</i>';
  diffs.innerHTML=[1,2,3].map(n=>`<button class="chip${fD.has(n)?' on':''}" data-d="${n}">${dn[n]}</button>`).join('');
  const ps=[...new Set(Q.map(q=>lab(q).replace(/ Q\d+$/,'')))];
- pp.innerHTML='<option value="">All papers</option>'+ps.map(p=>`<option>${p}</option>`).join('')}
+ pp.innerHTML='<option value="">All papers (filter by topic)</option>'+ps.map(p=>`<option>${p}</option>`).join('')}
 document.addEventListener('click',e=>{
  const l=e.target.closest('[data-l]');if(l){lv=l.dataset.l;fT.clear();fD.clear();save();build();render();return}
  const c=e.target.closest('.chip');if(!c)return;
@@ -101,13 +102,19 @@ document.addEventListener('click',e=>{
 pp.onchange=maxm.oninput=()=>render();
 function tog(k){const i=basket.indexOf(k);i<0?basket.push(k):basket.splice(i,1);save();render()}
 function ans(i){document.getElementById('q'+i).classList.toggle('show')}
-function hd(q){const t=bt(q);if(t===lastC)return'';lastC=t;return`<h3 class="ch c${cat(t)}">${pt(t)[0]!=TB[lv][0]?BH[pt(t)[0]]+' · ':''}${prov(t)?'':'Chapter '+pt(t)[1]+': '}${cname(t)}</h3>`}
+let PL=[];
+const plab=q=>lab(q).replace(/ Q\d+$/,'');
+function addPaper(){const on=PL.every(k=>basket.includes(k));basket=basket.filter(k=>!PL.includes(k));if(!on)basket=basket.concat(PL);save();render()}
+function hd(q){if(pp.value)return'';const t=bt(q);if(t===lastC)return'';lastC=t;return`<h3 class="ch c${cat(t)}">${pt(t)[0]!=TB[lv][0]?BH[pt(t)[0]]+' · ':''}${prov(t)?'':'Chapter '+pt(t)[1]+': '}${cname(t)}</h3>`}
 const bt=q=>q.t.slice().sort((a,b)=>ord(a)-ord(b))[0];
 function render(){
- const mx=+maxm.value||999;lastC='';
- const L=cur().filter(q=>(!fT.size||q.t.some(t=>fT.has(t)))&&(!fD.size||fD.has(gd(q)))&&(!pp.value||lab(q).replace(/ Q\d+$/,'')===pp.value)&&q.m<=mx)
+ const mx=+maxm.value||999;lastC='';const PM=!!pp.value;
+ const L=PM?cur().filter(q=>plab(q)===pp.value).sort((a,b)=>a.q-b.q)
+  :cur().filter(q=>(!fT.size||q.t.some(t=>fT.has(t)))&&(!fD.size||fD.has(gd(q)))&&q.m<=mx)
   .sort((a,b)=>ord(bt(a))-ord(bt(b))||a.y-b.y||a.p-b.p||a.q-b.q);
- list.innerHTML=L.length?L.map((q,n)=>hd(q)+`<div class="q${basket.includes(q.k)?' sel':''}" id="q${n}">
+ PL=PM?L.map(q=>q.k):[];
+ const ph=PM?`<div class="box" style="margin-bottom:14px"><h3 style="margin:0 0 6px">${pp.value}</h3><div style="font:13px sans-serif;color:var(--mut);margin-bottom:8px">${L.length} questions &middot; ${L.reduce((s,q)=>s+q.m,0)} marks &middot; shown in question order</div><button class="act" onclick="addPaper()">${PL.every(k=>basket.includes(k))?'Remove whole paper from worksheet':'Add whole paper to worksheet'}</button></div>`:'';
+ list.innerHTML=L.length?ph+L.map((q,n)=>hd(q)+`<div class="q${basket.includes(q.k)?' sel':''}" id="q${n}">
  <div class="meta"><b>${lab(q)}</b><span>${q.m} marks</span><span class="d${gd(q)}">${dn[gd(q)]}</span>
  ${q.t.map(t=>`<span class="tag c${cat(t)}">${clab(t)}</span>`).join('')}</div>
  ${img(q)}<div class="ans">${am(q)}</div>
@@ -116,7 +123,8 @@ function render(){
  ${SIMM[q.k]?`<a class="act" style="background:var(--mut)" href="similar/${encodeURIComponent(SIMM[q.k])}.pdf" target="_blank" rel="noopener">Similar questions</a>`:''}</div></div>`).join(''):'<p>No questions here yet. Send the papers (and the textbook contents page for this course) and I will add them.</p>';
  cnt.textContent=basket.length;tm.textContent=basket.reduce((s,k)=>s+D.find(q=>q.k==k).m,0)}
 const LVN={'Y12 Maths':'Year 12 Maths','Y13 Maths':'Year 13 Maths','Y12 FM':'Year 12 Further Maths','Y13 FM':'Year 13 Further Maths'};
-function wsTitle(){const B=basket.map(k=>D.find(q=>q.k==k));const lvs=[...new Set(B.map(q=>q.lvl))].sort((a,b)=>LV.indexOf(a)-LV.indexOf(b));
+function wsTitle(){const B=basket.map(k=>D.find(q=>q.k==k));
+ const p0=plab(B[0]);if(B.every(q=>plab(q)===p0)&&D.filter(q=>plab(q)===p0&&q.lvl==B[0].lvl).length==B.length)return(LVN[B[0].lvl]||B[0].lvl)+' - '+p0+' (whole paper)';const lvs=[...new Set(B.map(q=>q.lvl))].sort((a,b)=>LV.indexOf(a)-LV.indexOf(b));
  const tp=[];B.forEach(q=>{const n=cname(bt(q));if(!tp.includes(n))tp.push(n)});
  const lt=lvs.map(l=>LVN[l]||l).join(' & ');const tt=tp.length<=3?tp.join(', '):'Mixed topics';
  return lt+' - '+tt}
