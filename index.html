@@ -32,6 +32,13 @@ h3.ch{font:600 15px sans-serif;margin:18px 0 8px}h3.ch.cp{color:var(--cp)}h3.ch.
 #sheet{display:none}
 body.ws>*:not(#sheet){display:none}body.ws #sheet{display:block;background:#fff;color:#000;padding:16px;min-height:100vh}
 #sheet .pq{margin-bottom:18px;page-break-inside:avoid}@media print{.nop{display:none}#sheet{padding:0}}
+.sbar{position:relative;margin-bottom:6px}.sbar input{width:100%;font:16px sans-serif;padding:11px 12px 11px 38px;border-radius:8px;border:1.5px solid var(--line)}
+.sbar input:focus{outline:none;border-color:var(--acc)}.sbar svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--mut)}
+.shint{font:12px sans-serif;color:var(--mut);margin:0 2px 14px}
+mark{background:rgba(107,179,224,.32);color:inherit;border-radius:2px;padding:0 1px}
+.snip{font:13px/1.45 sans-serif;color:var(--mut);margin:0 0 8px;padding:6px 9px;border-left:3px solid var(--line)}.snip b{color:var(--ink);font-weight:600}
+.lvh{font:600 15px sans-serif;margin:20px 0 8px;color:var(--ink)}.lvh span{color:var(--mut);font-weight:400}
+body.srch #tbox,body.srch #ppw{display:none}#lbox{display:none}body.srch #lbox{display:block}body.srch .tabs button.on{background:none;border-bottom:0;margin-bottom:0;color:var(--mut)}
 #gate{display:none;position:fixed;inset:0;align-items:center;justify-content:center;background:var(--bg);z-index:9}
 body.locked #gate{display:flex}body.locked>*:not(#gate){display:none}
 #gate .gb{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:28px 32px;max-width:340px;text-align:center}
@@ -45,23 +52,27 @@ body.locked #gate{display:flex}body.locked>*:not(#gate){display:none}
 <header><h1><span class="hl">A-Level Maths</span> Past Exam Question Selector</h1><div class="tabs" id="tabs"></div></header>
 <div class="wrap">
 <aside>
-<div class="box"><h3>Textbook chapter</h3><div class="lg"><b style="color:var(--cp)">&#9632; Pure</b><b style="color:var(--cs)">&#9632; Statistics</b><b style="color:var(--cm)">&#9632; Mechanics</b></div><div id="topics"></div></div>
+<div class="box" id="lbox"><h3>Course</h3><div id="lcs"></div><h3 style="margin-top:10px">Year</h3><div id="lys"></div><div style="font:12px sans-serif;color:var(--mut);margin-top:8px">Searching all courses. Pick any of these to narrow the results.</div></div>
+<div class="box" id="tbox"><h3>Textbook chapter</h3><div class="lg"><b style="color:var(--cp)">&#9632; Pure</b><b style="color:var(--cs)">&#9632; Statistics</b><b style="color:var(--cm)">&#9632; Mechanics</b></div><div id="topics"></div></div>
 <div class="box"><h3>Difficulty</h3><div id="diffs"></div></div>
 <div class="box"><h3>Whole paper / marks</h3>
-<select id="pp"></select>
-<div style="font:12px sans-serif;color:var(--mut);margin:6px 0 10px">Pick a paper to show all its questions in order (other filters are ignored).</div>
+<div id="ppw"><select id="pp"></select>
+<div style="font:12px sans-serif;color:var(--mut);margin:6px 0 10px">Pick a paper to show all its questions in order (other filters are ignored).</div></div>
 Max marks <input id="maxm" type="number" min="1" value="20" style="width:60px"></div>
 <div class="box"><h3>Worksheet (<span id="cnt">0</span> q, <span id="tm">0</span> marks)</h3>
 <label><input type="checkbox" id="wans"> include mark schemes</label><br>
 <button class="act" onclick="printSheet()">Open worksheet / print</button><div id="msg" style="font:13px sans-serif;color:var(--h)"></div>
 <button class="act" style="background:var(--mut)" onclick="basket=[];save();render()">Clear selection</button></div>
 </aside>
-<main><div id="list"></div></main></div>
+<main><div class="sbar"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="7" cy="7" r="5"/><path d="M11 11l4 4"/></svg><input id="sq" type="search" placeholder="Search all questions, e.g. hypothesis test, Poisson, projectile" aria-label="Search questions" autocomplete="off"></div>
+<div class="shint" id="shint">Searches chapter names, topics and the wording of every question across all four courses. Put words in quotes for an exact phrase.</div>
+<div id="list"></div></main></div>
 <div id="sheet"></div>
 <script src="sha.js"></script>
 <script src="auth.js"></script>
 <script src="data.js"></script>
 <script src="similar.js"></script>
+<script src="search.js"></script>
 <script>
 const fp=k=>k.replace(/\//g,'_');
 const SIMM=(typeof SIM!=='undefined'&&!Array.isArray(SIM))?SIM:{};
@@ -95,9 +106,9 @@ function build(){
  const ps=[...new Set(Q.map(q=>lab(q).replace(/ Q\d+$/,'')))];
  pp.innerHTML='<option value="">All papers (filter by topic)</option>'+ps.map(p=>`<option>${p}</option>`).join('')}
 document.addEventListener('click',e=>{
- const l=e.target.closest('[data-l]');if(l){lv=l.dataset.l;fT.clear();fD.clear();save();build();render();return}
+ const l=e.target.closest('[data-l]');if(l){sq.value='';lv=l.dataset.l;fT.clear();fD.clear();save();build();render();return}
  const c=e.target.closest('.chip');if(!c)return;
- if(c.dataset.t){const k=c.dataset.t;fT.has(k)?fT.delete(k):fT.add(k)}else{const k=+c.dataset.d;fD.has(k)?fD.delete(k):fD.add(k)}
+ if(c.dataset.c){const k=c.dataset.c;fC.has(k)?fC.delete(k):fC.add(k)}else if(c.dataset.y){const k=+c.dataset.y;fY.has(k)?fY.delete(k):fY.add(k)}else if(c.dataset.t){const k=c.dataset.t;fT.has(k)?fT.delete(k):fT.add(k)}else{const k=+c.dataset.d;fD.has(k)?fD.delete(k):fD.add(k)}
  c.classList.toggle('on');render()});
 pp.onchange=maxm.oninput=()=>render();
 function tog(k){const i=basket.indexOf(k);i<0?basket.push(k):basket.splice(i,1);save();render()}
@@ -107,7 +118,72 @@ const plab=q=>lab(q).replace(/ Q\d+$/,'');
 function addPaper(){const on=PL.every(k=>basket.includes(k));basket=basket.filter(k=>!PL.includes(k));if(!on)basket=basket.concat(PL);save();render()}
 function hd(q){if(pp.value)return'';const t=bt(q);if(t===lastC)return'';lastC=t;return`<h3 class="ch c${cat(t)}">${pt(t)[0]!=TB[lv][0]?BH[pt(t)[0]]+' · ':''}${prov(t)?'':'Chapter '+pt(t)[1]+': '}${cname(t)}</h3>`}
 const bt=q=>q.t.slice().sort((a,b)=>ord(a)-ord(b))[0];
+const OCRT=(typeof OCR!=='undefined')?OCR:{};
+const SB={12:'Year 12 Maths',13:'Year 13 Maths',21:'Core Pure 1',22:'Core Pure 2',31:'Further Mechanics',32:'Further Statistics'};
+const LVN2={'Y12 Maths':'Year 12 Maths','Y13 Maths':'Year 13 Maths','Y12 FM':'Year 12 Further Maths','Y13 FM':'Year 13 Further Maths'};
+let fC=new Set(),fY=new Set(),IDX=null,sT=0;
+const sclab=t=>{const[b,c]=pt(t);return prov(t)?CHB[b][c]:SB[b]+' Ch '+c+': '+CHB[b][c]};
+const subOf=q=>{const s=SIMM[q.k];if(!s||/Similar to/.test(s)||s.indexOf(' - ')<0)return'';return s.split(' - ').slice(1).join(' – ')};
+const norm=x=>(x||'').toLowerCase().replace(/[‘’']/g,'').replace(/[^a-z0-9%]+/g,' ').trim();
+const wds=x=>norm(x).split(' ').filter(Boolean);
+function stem(w){const r=[['ations','at'],['ation','at'],['ies','y'],['ing',''],['ed',''],['es',''],['is',''],['s',''],['e','']];
+ for(const[a,b]of r)if(w.endsWith(a)&&w.length-a.length+b.length>=3&&!(a=='s'&&w.endsWith('ss')))return w.slice(0,w.length-a.length)+b;return w}
+let VOC=null;// stem -> how many times it appears in the whole bank
+function buildIdx(){VOC=new Map();IDX=D.map(q=>{const f={ch:q.t.map(sclab).join(' | '),sub:subOf(q),txt:(OCRT[q.k]||''),pap:lab(q)+' 20'+q.y+' '+q.pre+' '+LVN2[q.lvl]};
+ const o={q,f,w:{},s:{},n:{}};for(const k in f){o.w[k]=wds(f[k]);o.s[k]=o.w[k].map(stem);o.s[k].forEach(x=>VOC.set(x,(VOC.get(x)||0)+1));o.n[k]=' '+norm(f[k])+' '}return o})}
+function parseQ(v){const ph=[],tk=[];v=v.replace(/"([^"]+)"/g,(m,a)=>{const n=norm(a);if(n)ph.push(n);return' '});
+ wds(v).forEach(w=>{if(w.length>=2||/\d/.test(w)){const st=stem(w);tk.push((VOC.get(st)||0)>=3?{x:st}:{x:st,p:w})}});return{ph,tk}}
+const hit=(t,w,st)=>st===t.x||(t.p&&w.startsWith(t.p));
+const FW={ch:6,sub:5,txt:2,pap:1};
+function score(o,P){let s=0;
+ for(const t of P.tk){let b=0;for(const k in FW){let n=0;for(let i=0;i<o.w[k].length;i++)if(hit(t,o.w[k][i],o.s[k][i]))n++;if(n)b=Math.max(b,FW[k]+(k=='txt'?Math.min(n-1,4)*.5:0))}if(!b)return 0;s+=b}
+ for(const p of P.ph){let b=0;for(const k in FW)if(o.n[k].includes(' '+p+' ')||o.n[k].includes(p))b=Math.max(b,FW[k]);if(!b)return 0;s+=b}
+ return s}
+const esc=x=>String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const rx=x=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+const isHit=(P,w)=>{const l=norm(w);if(!l)return false;const st=stem(l);return P.tk.some(t=>hit(t,l,st))};
+const phRe=P=>P.ph.length?new RegExp('('+P.ph.map(p=>p.split(' ').map(rx).join('[^A-Za-z0-9%]+')).join('|')+')','gi'):null;
+function hl(x,P){let o=String(x).replace(/([A-Za-z0-9%’']+)|([^A-Za-z0-9%’']+)/g,(m,w,r)=>w?(isHit(P,w)?'<mark>'+esc(w)+'</mark>':esc(w)):esc(r));
+ const R=phRe(P);return R?o.replace(R,'<mark>$1</mark>'):o}
+function snip(o,P){const t=o.f.txt.replace(/\s+/g,' ').trim();if(!t)return'';const pos=[];const W=/[A-Za-z0-9%’']+/g;let m;
+ while((m=W.exec(t)))if(isHit(P,m[0]))pos.push([m.index,m[0].length]);
+ const R=phRe(P);if(R){let pm;while((pm=R.exec(t)))pos.push([pm.index,pm[0].length,1])}
+ if(!pos.length)return'';pos.sort((x,y)=>x[0]-y[0]);
+ const ok=i=>{const c=t.slice(Math.max(0,pos[i][0]-60),pos[i][0]+80);return (c.match(/[a-z]{3,}/g)||[]).length};
+ let best=0,bs=-1;for(let i=0;i<pos.length;i++){const sc=pos.filter(p=>p[0]>=pos[i][0]&&p[0]<pos[i][0]+180).reduce((s,p)=>s+(p[2]?3:1),0)*4+ok(i);if(sc>bs){bs=sc;best=i}}
+ const at=pos[best][0];let a=Math.max(0,at-80),b=Math.min(t.length,at+190);if(a>0)a=t.indexOf(' ',a)+1;const e=t.lastIndexOf(' ',b);if(b<t.length&&e>a)b=e;
+ return`<div class="snip">${a>0?'… ':''}${hl(t.slice(a,b),P)}${b<t.length?' …':''}</div>`}
+const inTopic=(o,P)=>P.tk.every(t=>['ch','sub'].some(k=>o.w[k].some((w,i)=>hit(t,w,o.s[k][i]))))&&P.ph.every(p=>o.n.ch.includes(p)||o.n.sub.includes(p));
+const crs=l=>l.includes('FM')?'F':'M',yr=l=>l.startsWith('Y12')?12:13;
+function chipSet(id,items,set,attr){document.getElementById(id).innerHTML=items.map(([v,n,c])=>`<button class="chip${set.has(v)?' on':''}" data-${attr}="${v}">${n} (${c})</button>`).join('')}
+function renderSearch(v){if(!IDX)buildIdx();const P=parseQ(v),R=P,mx=+maxm.value||999;
+ const hits=IDX.map(o=>({o,s:score(o,P)})).filter(h=>h.s>0&&(!fD.size||fD.has(gd(h.o.q)))&&h.o.q.m<=mx);
+ const hY=hits.filter(h=>!fY.size||fY.has(yr(h.o.q.lvl))),hC=hits.filter(h=>!fC.size||fC.has(crs(h.o.q.lvl)));
+ chipSet('lcs',[['M','Maths',hY.filter(h=>crs(h.o.q.lvl)=='M').length],['F','Further Maths',hY.filter(h=>crs(h.o.q.lvl)=='F').length]],fC,'c');
+ chipSet('lys',[[12,'Year 12',hC.filter(h=>yr(h.o.q.lvl)==12).length],[13,'Year 13',hC.filter(h=>yr(h.o.q.lvl)==13).length]],fY,'y');
+ const H=hits.filter(h=>(!fC.size||fC.has(crs(h.o.q.lvl)))&&(!fY.size||fY.has(yr(h.o.q.lvl))))
+  .sort((a,b)=>LV.indexOf(a.o.q.lvl)-LV.indexOf(b.o.q.lvl)||b.s-a.s||b.o.q.y-a.o.q.y||a.o.q.p-b.o.q.p||a.o.q.q-b.o.q.q);
+ PL=H.map(h=>h.o.q.k);const all=PL.length&&PL.every(k=>basket.includes(k));
+ shint.innerHTML=H.length?`${H.length} question${H.length>1?'s':''} &middot; ${H.reduce((s,h)=>s+h.o.q.m,0)} marks &middot; best matches first within each course <button class="act" style="margin-left:8px;padding:5px 10px;font-size:13px" onclick="addPaper()">${all?'Remove all of these from worksheet':'Add all '+H.length+' to worksheet'}</button>`:'No questions match. Try fewer words, a shorter form such as <i>hypoth</i>, or clear the course, difficulty and max-marks filters.';
+ let lg='';
+ list.innerHTML=H.map((h,n)=>{const q=h.o.q;let hd='';if(q.lvl!==lg){lg=q.lvl;const c=H.filter(x=>x.o.q.lvl==lg).length;hd=`<div class="lvh">${LVN2[lg]} <span>(${c})</span></div>`}
+  const sb=h.o.f.sub;
+  return hd+`<div class="q${basket.includes(q.k)?' sel':''}" id="q${n}">
+ <div class="meta"><b>${lab(q)}</b><span>${q.m} marks</span><span class="d${gd(q)}">${dn[gd(q)]}</span>
+ ${q.t.map(t=>`<span class="tag c${cat(t)}">${hl(sclab(t),R)}</span>`).join('')}</div>
+ ${sb?`<div class="snip" style="border-left-color:var(--acc)"><b>Topic:</b> ${hl(sb,R)}</div>`:''}${inTopic(h.o,P)?'':snip(h.o,P)}
+ ${img(q)}<div class="ans">${am(q)}</div>
+ <div class="row"><button class="act" onclick="tog('${q.k}')">${basket.includes(q.k)?'Remove':'Add to worksheet'}</button>
+ <button class="act" style="background:var(--mut)" onclick="ans(${n})">Mark scheme</button>
+ ${SIMM[q.k]?`<a class="act" style="background:var(--mut)" href="similar/${encodeURIComponent(SIMM[q.k])}.pdf" target="_blank" rel="noopener">Similar questions</a>`:''}</div></div>`}).join('');
+ cnt.textContent=basket.length;tm.textContent=basket.reduce((s,k)=>s+D.find(q=>q.k==k).m,0)}
+const sOn=()=>sq.value.trim().length>=2;
+sq.addEventListener('input',()=>{clearTimeout(sT);sT=setTimeout(()=>{if(!sOn()){fC.clear();fY.clear()}render()},150)});
+sq.addEventListener('keydown',e=>{if(e.key==='Escape'){sq.value='';fC.clear();fY.clear();render()}});
 function render(){
+ document.body.classList.toggle('srch',sOn());
+ if(sOn())return renderSearch(sq.value);
+ shint.innerHTML='Searches chapter names, topics and the wording of every question across all four courses. Put words in quotes for an exact phrase.';
  const mx=+maxm.value||999;lastC='';const PM=!!pp.value;
  const L=PM?cur().filter(q=>plab(q)===pp.value).sort((a,b)=>a.q-b.q)
   :cur().filter(q=>(!fT.size||q.t.some(t=>fT.has(t)))&&(!fD.size||fD.has(gd(q)))&&q.m<=mx)
