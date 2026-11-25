@@ -223,6 +223,6 @@ function dl(){const base=location.href.replace(/[^/]*$/,'');const h='<!DOCTYPE h
 function unlocked(){try{return localStorage.getItem('qb_ok')===AUTH.hash||sessionStorage.getItem('qb_ok')===AUTH.hash}catch(e){return false}}
 function go(){document.body.classList.remove('locked');build();render()}
 function tryLogin(){const p=pw.value;gmsg.textContent='Checking...';setTimeout(()=>{if(hashPw(p,AUTH.salt,AUTH.rounds)===AUTH.hash){try{(rem.checked?localStorage:sessionStorage).setItem('qb_ok',AUTH.hash)}catch(e){}pw.value='';gmsg.textContent='';go()}else{gmsg.textContent='Incorrect password.';pw.value=''}},30)}
-if(unlocked())go();else{document.body.classList.add('locked');setTimeout(()=>{try{pw.focus()}catch(e){}},50)}
+go();
 
 </script></body></html>
