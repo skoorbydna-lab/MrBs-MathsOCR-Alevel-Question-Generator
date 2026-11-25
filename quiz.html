@@ -2266,6 +2266,31 @@ addC(K+"M10:1",()=>{const R=r(2,6),h=r(6,14),mu=pick([.3,.4,.5,.8,1]);const tp=R
 })();
 
 // app
+
+// Year 12 Maths: no coefficient of friction or friction on slopes (these are Year 13 content).
+// Drop generators that only make such questions; make mixed ones retry until they give a Year 12 question.
+(()=>{const BAN=/coefficient of friction|μ|\bmu\b|inclined|slope|point of (sliding|slipping|moving)|limiting friction/i;
+ const ok=q=>q&&!BAN.test(q[0]+" "+q[1]);
+ const fix=(fns,L)=>[].concat(fns).map(f=>{let good=0;for(let i=0;i<60;i++){try{if(ok(f(L)))good++}catch(e){}}if(!good)return null;if(good==60)return f;
+  const g=x=>{let q;for(let i=0;i<80;i++){q=f(x);if(ok(q))return q}return q};return g}).filter(Boolean);
+ for(const k of Object.keys(G))if(/^Y12 Maths:2[12]:/.test(k)){
+  if(GC[k]){GC[k]=fix(GC[k],1);if(!GC[k].length)delete GC[k]}
+  const s=fix(G[k],0);
+  if(GC[k]){G[k]=s.length?s:[].concat(GC[k])}else{
+   // no separate challenge list: G functions take the level, so check both levels
+   const both=[].concat(G[k]).map(f=>{const a=fix([f],0)[0],b=fix([f],1)[0];if(!a&&!b)return null;return x=>(x?(b||a):(a||b))(x)}).filter(Boolean);
+   if(both.length)G[k]=both;else delete G[k]}
+ }})();
+// Year 12 Maths 22.2 Normal reaction force: horizontal surfaces, stacked objects and lifts (no slopes or friction).
+(()=>{const k="Y12 Maths:22:1",n=v=>String(+v.toFixed(2)),ri=(a,b)=>a+Math.floor(Math.random()*(b-a+1)),pk=a=>a[ri(0,a.length-1)];
+ G[k]=[L=>{const m=ri(2,9),P=ri(5,15);return pk([
+   [`A box of mass ${m} kg rests on horizontal ground. A vertical force of ${P} N pulls upwards on the box, which stays on the ground. Find the normal reaction (g = 9.8)`,`R = ${n(m*9.8-P)} N`],
+   [`A box of mass ${m} kg rests on horizontal ground. A vertical force of ${P} N pushes down on the box. Find the normal reaction (g = 9.8)`,`R = ${n(m*9.8+P)} N`]])},
+  L=>{const a=ri(2,6),b=ri(2,6);return[`A book of mass ${a} kg rests on top of a box of mass ${b} kg, which rests on a horizontal floor. Find the normal reaction between the book and the box, and between the box and the floor (g = 9.8)`,`${n(a*9.8)} N; ${n((a+b)*9.8)} N`]}];
+ GC[k]=[()=>{const m=ri(50,90),a=pk([0.5,1,1.5,2]),up=Math.random()<.5;return[`A person of mass ${m} kg stands in a lift that is accelerating ${up?"upwards":"downwards"} at ${a} m s^{-2}. Find the normal reaction between the person and the floor of the lift (g = 9.8)`,`R = ${n(m*(9.8+(up?a:-a)))} N`]},
+  ()=>{const m=ri(3,8),P=ri(10,30),M=ri(2,5);return[`A box of mass ${m} kg rests on a horizontal table. A particle of mass ${M} kg hangs from the box by a string through a hole in the table, and a vertical force of ${P} N pulls upwards on the box. The system is in equilibrium. Find the normal reaction on the box (g = 9.8)`,`R = ${n((m+M)*9.8-P)} N`]}];
+})();
+
 </script>
 <script>
 // ===== Multiple-choice builder for the A-Level generators =====
